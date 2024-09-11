@@ -7,7 +7,8 @@ import java.math.BigDecimal;
 
 @Getter
 @Setter
-public class CreateProductDEML implements Serializable {
+public class GetIdResultProductDEML implements Serializable {
+    private Integer id;
     private String nombreDEML;
     private String descripcionDEML;
     private BigDecimal precio;
