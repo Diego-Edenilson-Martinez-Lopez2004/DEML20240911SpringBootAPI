@@ -4,6 +4,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.example.DEML20240911.modelos.ProductDEML;
 
-public interface ProductDEMLIRepository extends JpaRepository<ProductDEML, Integer>  {
+public interface IProductDEMLRepository extends JpaRepository<ProductDEML, Integer>  {
 
 }

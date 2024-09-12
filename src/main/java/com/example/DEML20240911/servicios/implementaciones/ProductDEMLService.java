@@ -1,12 +1,17 @@
 package com.example.DEML20240911.servicios.implementaciones;
-
-import com.example.DEML20240911.dtos.productDEML.*;
+import com.example.DEML20240911.dtos.productDEML.ProductDEMLGuardar;
+import com.example.DEML20240911.dtos.productDEML.ProductDEMLEditar;
+import com.example.DEML20240911.dtos.productDEML.ProductDEMLSalida;
 import com.example.DEML20240911.modelos.ProductDEML;
-import com.example.DEML20240911.repositorios.ProductDEMLIRepository;
+import com.example.DEML20240911.repositorios.IProductDEMLRepository;
 import com.example.DEML20240911.servicios.interfaces.IProductDEMLService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -14,39 +19,53 @@ import java.util.stream.Collectors;
 public class ProductDEMLService implements IProductDEMLService {
 
     @Autowired
-    private ProductDEMLRepository productRepository;
+    private IProductDEMLRepository productDEMLRepository;
 
     @Autowired
     private ModelMapper modelMapper;
 
     @Override
-    public List<SearchResultProductsDEML.ProductsDEML> obtenerTodos() {
-        List<ProductDEML> products = productRepository.findAll();
-        return products.stream()
-                .map(product -> modelMapper.map(product, SearchResultProductsDEML.ProductsDEML.class))
+    public List<ProductDEMLSalida> obtenerTodos() {
+        List<ProductDEML> productsDEML = productDEMLRepository.findAll();
+
+        return productsDEML.stream()
+                .map(productDEML -> modelMapper.map(productDEML, ProductDEMLSalida.class))
                 .collect(Collectors.toList());
     }
 
     @Override
-    public GetIdResultProductDEML obtenerPorId(Integer id) {
-        ProductDEML product = productRepository.findById(id).orElseThrow();
-        return modelMapper.map(product, GetIdResultProductDEML.class);
+    public Page<ProductDEMLSalida> obtenerTodosPaginados(Pageable pageable) {
+        Page<ProductDEML> page = productDEMLRepository.findAll(pageable);
+
+        List<ProductDEMLSalida> productDEMLDto = page.stream()
+                .map(productDEML -> modelMapper.map(productDEML, ProductDEMLSalida.class))
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(productDEMLDto, page.getPageable(), page.getTotalElements());
     }
 
     @Override
-    public GetIdResultProductDEML crear(CreateProductDEML createProductDEML) {
-        ProductDEML product = productRepository.save(modelMapper.map(createProductDEML, ProductDEML.class));
-        return modelMapper.map(product, GetIdResultProductDEML.class);
+    public ProductDEMLSalida obtenerPorId(Integer id) {
+        return modelMapper.map(productDEMLRepository.findById(id).orElse(null), ProductDEMLSalida.class);
     }
 
     @Override
-    public GetIdResultProductDEML editar(EditProductDEML editProductDEML) {
-        ProductDEML product = productRepository.save(modelMapper.map(editProductDEML, ProductDEML.class));
-        return modelMapper.map(product, GetIdResultProductDEML.class);
+    public ProductDEMLSalida crear(ProductDEMLGuardar createProductDEML) {
+        ProductDEML productDEML = productDEMLRepository.save(modelMapper.map(createProductDEML, ProductDEML.class));
+        return modelMapper.map(productDEML, ProductDEMLSalida.class);
+    }
+
+    @Override
+    public ProductDEMLSalida editar(Integer id, ProductDEMLEditar editProductDEML) {
+        ProductDEML existingProduct = productDEMLRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+        modelMapper.map(editProductDEML, existingProduct);
+        ProductDEML updatedProduct = productDEMLRepository.save(existingProduct);
+        return modelMapper.map(updatedProduct, ProductDEMLSalida.class);
     }
 
     @Override
     public void eliminarPorId(Integer id) {
-        productRepository.deleteById(id);
+        productDEMLRepository.deleteById(id);
     }
 }
